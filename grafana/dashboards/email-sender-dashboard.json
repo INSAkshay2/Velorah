@@ -1,0 +1,64 @@
+{
+  "title": "Email Sender",
+  "uid": "email-sender",
+  "version": 1,
+  "timezone": "browser",
+  "panels": [
+    {
+      "title": "Emails Sent Per Minute",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(emails_sent_total[1m])",
+          "legendFormat": "{{provider}}"
+        }
+      ]
+    },
+    {
+      "title": "Error Rate",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(emails_failed_total[1m]) / rate(emails_sent_total[1m]) * 100",
+          "legendFormat": "error %"
+        }
+      ]
+    },
+    {
+      "title": "Queue Depth",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+      "targets": [
+        {
+          "expr": "queue_depth",
+          "legendFormat": "waiting"
+        }
+      ]
+    },
+    {
+      "title": "P95 Send Latency",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(email_send_duration_seconds_bucket[1m]))",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "title": "Circuit Breaker State",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "circuit_breaker_state",
+          "legendFormat": "state"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 30
+}
