@@ -1,15 +1,36 @@
 # 📬 Bulk Email Delivery Service
+<div align="center">
 
-A production-grade, multi-provider bulk email delivery service built on BullMQ,
-Express, and Redis. Designed to send **thousands of emails per minute** with
-zero duplicates, automatic provider failover, rate limiting, and AI-powered
-subject-line personalisation.
+![Node.js](https://img.shields.io/badge/Node.js-22-339933?style=for-the-badge&logo=node.js&logoColor=white)
+![Express.js](https://img.shields.io/badge/Express.js-5-000000?style=for-the-badge&logo=express&logoColor=white)
+![BullMQ](https://img.shields.io/badge/BullMQ-Queue-EA4335?style=for-the-badge)
+![Redis](https://img.shields.io/badge/Redis-Upstash-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Google-Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+
+<p align="center">
+A production-grade, multi-provider bulk email delivery platform built with <strong>Express, BullMQ, Redis, PostgreSQL, and React</strong>. Designed for high-throughput email campaigns with automatic failover, idempotency, rate limiting, AI-powered subject personalization, and real-time monitoring.
+</p>
+
+<p align="center">
+  <a href="#-features"><strong>Features</strong></a> •
+  <a href="#-architecture"><strong>Architecture</strong></a> •
+  <a href="#-screenshots"><strong>Screenshots</strong></a> •
+  <a href="#-api-endpoints"><strong>API</strong></a> •
+  <a href="#-getting-started"><strong>Getting Started</strong></a> •
+  <a href="#-project-structure"><strong>Project Structure</strong></a>
+</p>
 
 ---
+---
 
-## Architecture
+# 🏗️ Architecture
 
-````
+```text
                     ┌─────────────┐
                     │   Client    │
                     │ (API / k6)  │
@@ -18,236 +39,381 @@ subject-line personalisation.
                            ▼
               ┌────────────────────────┐
               │   Express (src/)       │
-              │  /health  /metrics     │
+              │  /health   /metrics    │
               │  /api/stats/*          │
               │  /api/campaigns        │
               └────────┬───────────────┘
                        │
               ┌────────▼───────────────┐
-              │  BullMQ Queue          │
-              │  (Upstash Redis)       │
+              │   BullMQ Queue         │
+              │   (Upstash Redis)      │
               └────────┬───────────────┘
-                       │ jobs
+                       │ Jobs
               ┌────────▼───────────────┐
-              │  BullMQ Worker         │
-              │  ┌─────────────────┐   │
-              │  │ Idempotency     │   │  ← SET NX atomic guard
-              │  │ (SHA-256 key)   │   │
-              │  ├─────────────────┤   │
-              │  │ Rate Limiter    │   │  ← Redis Lua EVAL sliding window
-              │  │ (100/min)       │   │
-              │  ├─────────────────┤   │
-              │  │ AI Personaliser │   │  ← Anthropic Claude Haiku
-              │  │ (token bucket)  │   │
-              │  ├─────────────────┤   │
-              │  │ SendGrid ───────x───│──→ Circuit OPENS after 5 failures
-              │  │ Mailgun ────────▼───│──→ Fallback provider
-              │  │ SMTP (last)     │   │
-              │  └─────────────────┘   │
-              # Email Bulk Delivery Service
+              │   BullMQ Worker        │
+              │                        │
+              │ ┌────────────────────┐ │
+              │ │ Idempotency        │ │
+              │ │ (SHA-256 Key)      │ │
+              │ └────────────────────┘ │
+              │           │            │
+              │ ┌────────────────────┐ │
+              │ │ Rate Limiter       │ │
+              │ │ Redis Lua Script   │ │
+              │ └────────────────────┘ │
+              │           │            │
+              │ ┌────────────────────┐ │
+              │ │ AI Personaliser    │ │
+              │ │ Gemini + Cache     │ │
+              │ └────────────────────┘ │
+              │           │            │
+              │ ┌────────────────────┐ │
+              │ │ SendGrid           │ │
+              │ │ Circuit Breaker    │ │
+              │ └─────────┬──────────┘ │
+              │           ▼            │
+              │ ┌────────────────────┐ │
+              │ │ Mailgun            │ │
+              │ └─────────┬──────────┘ │
+              │           ▼            │
+              │ ┌────────────────────┐ │
+              │ │ SMTP Fallback      │ │
+              │ └────────────────────┘ │
+              └───────────┬────────────┘
+                          │
+                          ▼
+                  Email Delivery
+```
 
-              A production-grade bulk email platform built with Express, BullMQ, Redis, and Postgres. It is designed to send campaigns reliably at scale with provider failover, deduplication, rate limiting, AI-assisted subject personalization, and a live dashboard for ops visibility.
+---
 
-           ## Screenshots
+# 📸 Screenshots
 
 | Brand / Hero Screen | Grafana-style Observability Dashboard |
 |----------------------|---------------------------------------|
-| <img src="Photos/hero.jpeg" alt="Brand Hero Screen" width="450"> | <img src="Photos/1.jpeg" alt="Grafana-style Observability Dashboard" width="450"> |
+| <img src="Photos/hero.jpeg" alt="Brand Hero Screen" width="450"> | <img src="Photos/1.jpeg" alt="Grafana Dashboard" width="450"> |
 
 | Server Runtime Log Stream | Thunder Client Campaign API Request |
 |---------------------------|-------------------------------------|
-| <img src="Photos/2.jpeg" alt="Server Runtime Logs" width="450"> | <img src="Photos/3.jpeg" alt="Thunder Client Campaign Request" width="450"> |
+| <img src="Photos/2.jpeg" alt="Runtime Logs" width="450"> | <img src="Photos/3.jpeg" alt="Campaign API Request" width="450"> |
 
-              ## What It Does
+---
 
-              - Accepts campaign creation requests through `POST /api/campaigns`.
-              - Enqueues one BullMQ job per recipient and tracks delivery state in Postgres.
-              - Prevents duplicate sends with Redis-backed idempotency keys.
-              - Applies a Redis Lua sliding-window rate limiter before every send.
-              - Sends through a failover chain of SendGrid, Mailgun, then SMTP.
-              - Personalizes subject lines with Gemini, a Redis cache, and a token bucket.
-              - Exposes health, metrics, and campaign stats endpoints for monitoring.
-              - Ships with a React dashboard that visualizes delivery rate, queue depth, provider health, and recent failures.
+# 🚀 What It Does
 
-              ## Architecture
+- Accepts campaign creation requests through `POST /api/campaigns`.
+- Enqueues one BullMQ job per recipient and tracks delivery state in PostgreSQL.
+- Prevents duplicate sends using Redis-backed idempotency keys.
+- Applies a Redis Lua sliding-window rate limiter before every send.
+- Automatically fails over from **SendGrid → Mailgun → SMTP**.
+- Personalizes email subject lines using **Gemini AI**, Redis caching, and a token bucket.
+- Exposes `/health`, `/metrics`, and campaign statistics endpoints.
+- Ships with a React dashboard that visualizes delivery rate, queue depth, provider health, and recent failures.
 
-              ```mermaid
-              flowchart TD
-                A[Client / API tool / Dashboard] --> B[Express API]
-                B --> C[Postgres campaigns + delivery_events]
-                B --> D[BullMQ Queue]
-                D --> E[BullMQ Worker]
-                E --> F[Idempotency guard\nRedis SET NX]
-                E --> G[Rate limiter\nRedis Lua sliding window]
-                E --> H[AI personalization\nGemini + cache]
-                E --> I[SendGrid]
-                I --> J[Mailgun]
-                J --> K[SMTP fallback]
-                E --> L[Metrics + queue depth]
-                B --> M[/metrics]
-                B --> N[/dashboard]
-              ```
+---
+# ⭐ Key Features
 
-              ## Key Features
+## ✅ Reliable Delivery
 
-              ### Reliable delivery
+Each email provider is protected by a **Circuit Breaker** with `CLOSED`, `OPEN`, and `HALF_OPEN` states. After **5 consecutive failures**, the provider is temporarily skipped for **30 seconds** before a retry is attempted. This ensures uninterrupted email delivery even if one provider becomes unavailable.
 
-              Each provider is wrapped in a circuit breaker with `CLOSED`, `OPEN`, and `HALF_OPEN` states. After 5 consecutive failures, a provider is skipped for a 30-second cooldown before a test request is allowed back through. That keeps the system moving even when one provider is down.
+---
 
-              ### No duplicate sends
+## 🔒 No Duplicate Sends
 
-              The worker uses an atomic Redis `SET NX` guard keyed by campaign and recipient email, so retries and queue re-deliveries do not create duplicate messages.
+Every email is assigned a unique **SHA-256 idempotency key** and guarded by an atomic Redis `SET NX` operation. Queue retries, worker crashes, and duplicate requests never result in the same email being sent twice.
 
-              ### Safe throttling
+---
 
-              The rate limiter uses a Redis sorted-set Lua script to enforce a 100 sends per minute sliding window. If Redis is temporarily unavailable, the limiter fails open so sending can continue.
+## 🚦 Safe Rate Limiting
 
-              ### AI-powered subject lines
+A **Redis Lua sliding-window rate limiter** enforces a limit of **100 emails per minute**. If Redis becomes temporarily unavailable, the limiter gracefully fails open to maintain service availability.
 
-              The personalizer calls Gemini, caches successful responses for one hour, enforces a 10 req/s token bucket, and times out after 3 seconds. If anything goes wrong, the original subject line is used.
+---
 
-              ### Production metrics
+## 🤖 AI-powered Subject Lines
 
-              The `/metrics` endpoint exposes Prometheus-ready counters, histograms, and gauges for sent emails, failures, send latency, queue depth, circuit breaker state, rate-limit rejections, and AI usage.
+The personalization service uses **Google Gemini** to generate engaging subject lines. Results are cached in Redis for one hour, protected by a **10 requests/second token bucket**, and automatically fall back to the original subject if AI fails or times out.
 
-              ### Live dashboard
+---
 
-              The dashboard shows total sent, delivery rate, failed messages, queue depth, provider health, recent failures, and an AI toggle. Summary data refreshes every 5 seconds and the hourly chart refreshes every 30 seconds.
+## 📊 Production Metrics
 
-              ## API
+Prometheus-compatible metrics are exposed through the `/metrics` endpoint, including:
 
-              | Method | Path | Description |
-              | --- | --- | --- |
-              | GET | `/health` | Liveness check with uptime and queue depth |
-              | GET | `/metrics` | Prometheus metrics text output |
-              | POST | `/api/campaigns` | Create a campaign and enqueue recipient jobs |
-              | GET | `/api/campaigns/:id` | Fetch campaign status and delivery rate |
-              | GET | `/api/stats/summary` | Total sent, delivery rate, failures, queue depth |
-              | GET | `/api/stats/hourly` | 24-hour send volume |
-              | GET | `/api/stats/providers` | Provider health and volume |
-              | GET | `/api/stats/failures` | Most recent failed deliveries |
-              | PATCH | `/api/settings/ai` | Toggle AI personalization on or off |
+- Emails Sent
+- Failed Deliveries
+- Queue Depth
+- Email Latency
+- Circuit Breaker Status
+- Rate Limit Rejections
+- AI Usage Statistics
 
-              ## Tech Stack
+---
 
-              - Node.js + Express
-              - BullMQ + Redis
-              - PostgreSQL
-              - prom-client / Prometheus metrics
-              - Vite + React dashboard
-              - Recharts for the hourly chart
-              - Tailwind CSS for styling
+## 📈 Live Dashboard
 
-              ## Getting Started
+The React dashboard provides live operational visibility, including:
 
-              ### Prerequisites
+- 📧 Total Emails Sent
+- 📊 Delivery Rate
+- ❌ Failed Deliveries
+- ⏳ Queue Depth
+- 🟢 Provider Health
+- ⚠️ Recent Failures
+- 🤖 AI Personalization Toggle
 
-              - Node.js 22+
-              - Redis
-              - PostgreSQL
-              - At least one email provider credential set
-              - Optional: Google API key for AI personalization
+Dashboard statistics refresh automatically every **5 seconds**, while hourly analytics update every **30 seconds**.
 
-              ### Install
+---
 
-              ```bash
-              npm install
-              cd dashboard
-              npm install
-              ```
+# 🌐 API Endpoints
 
-              ### Run locally
+| Method | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/health` | Health check with uptime and queue status |
+| GET | `/metrics` | Prometheus metrics endpoint |
+| POST | `/api/campaigns` | Create a campaign and enqueue recipient jobs |
+| GET | `/api/campaigns/:id` | Retrieve campaign status and delivery progress |
+| GET | `/api/stats/summary` | Overall delivery statistics |
+| GET | `/api/stats/hourly` | Email volume over the last 24 hours |
+| GET | `/api/stats/providers` | Provider health and usage |
+| GET | `/api/stats/failures` | Recent failed deliveries |
+| PATCH | `/api/settings/ai` | Enable or disable AI personalization |
 
-              ```bash
-              # backend
-              npm run dev
+---
 
-              # dashboard in a second terminal
-              cd dashboard
-              npm run dev
-              ```
+# 🛠️ Tech Stack
 
-              ### Verify
+### Backend
 
-              ```bash
-              curl http://localhost:3000/health
-              curl http://localhost:3000/metrics
-              npm test
-              ```
+- Node.js
+- Express.js
+- BullMQ
+- Redis (Upstash)
+- PostgreSQL
 
-              ## Environment Variables
+### Email Providers
 
-              | Variable | Purpose |
-              | --- | --- |
-              | `REDIS_URL` | Redis connection string used by the queue, limiter, idempotency, and AI cache |
-              | `DATABASE_URL` | Postgres connection string |
-              | `SENDGRID_API_KEY` | SendGrid API key |
-              | `SENDGRID_FROM` | Verified SendGrid sender address |
-              | `MAILGUN_API_KEY` | Mailgun API key |
-              | `MAILGUN_DOMAIN` | Mailgun sending domain |
-              | `MAILGUN_FROM` | Optional Mailgun sender address |
-              | `SMTP_HOST` | SMTP server hostname |
-              | `SMTP_PORT` | SMTP server port |
-              | `SMTP_USER` | SMTP username |
-              | `SMTP_PASS` | SMTP password |
-              | `SMTP_FROM` | SMTP sender address |
-              | `SMTP_SECURE` | `true` for implicit TLS, otherwise `false` |
-              | `GOOGLE_API_KEY` | Gemini API key used for subject personalization |
-              | `AI_PERSONALISATION_ENABLED` | `true` or `false` runtime toggle |
-              | `PORT` | Server port, defaults to `3000` |
+- SendGrid
+- Mailgun
+- SMTP (Fallback)
 
-              ## Scripts
+### AI
 
-              ### Root
+- Google Gemini API
 
-              ```bash
-              npm run dev
-              npm start
-              npm test
-              npm run metrics
-              ```
+### Monitoring
 
-              ### Dashboard
+- Prometheus
+- prom-client
 
-              ```bash
-              cd dashboard
-              npm run dev
-              npm run build
-              ```
+### Frontend
 
-              ## Load Testing
+- React
+- Vite
+- Tailwind CSS
+- Recharts
 
-              The `load-tests/campaign.js` script exercises the campaign flow under realistic traffic. Run it against localhost or a deployed instance with k6.
+---
 
-              ```bash
-              k6 run load-tests/campaign.js
-              k6 run -e BASE_URL=https://your-app.example.com load-tests/campaign.js
-              ```
+# 🚀 Getting Started
 
-              ## Project Structure
+## Prerequisites
 
-              ```text
-              src/
-              ├── db/              # Postgres pool and schema bootstrap
-              ├── queues/          # BullMQ queue definition
-              ├── routes/          # Health, stats, campaigns, and AI toggle routes
-              ├── services/        # Rate limiting, metrics, failover, idempotency, AI
-              ├── utils/           # Logger helpers
-              └── workers/         # BullMQ worker that sends emails
+Before running the project, ensure you have:
 
-              dashboard/           # Vite + React UI
-              load-tests/          # k6 campaign load test
-              tests/               # Integration and service tests
-              ```
+- Node.js **22+**
+- Redis
+- PostgreSQL
+- At least one configured email provider
+- *(Optional)* Google Gemini API key
 
-              ## Notes
+---
 
-              - The worker updates campaign status in `delivery_events` and marks a campaign `completed` when all recipients have been processed.
-              - The dashboard reads directly from the API and is safe to run independently.
-              - The screenshots in this README are stored alongside the project for easy reuse.
+## Installation
 
-              ## License
-
-              MIT
 ```bash
-````
+npm install
+
+cd dashboard
+npm install
+```
+
+---
+
+## Run the Backend
+
+```bash
+npm run dev
+```
+
+---
+
+## Run the Dashboard
+
+```bash
+cd dashboard
+npm run dev
+```
+
+---
+
+## Verify Installation
+
+```bash
+curl http://localhost:3000/health
+
+curl http://localhost:3000/metrics
+
+npm test
+```
+# ⚙️ Environment Variables
+
+Create a `.env` file in the project root and configure the following variables:
+
+| Variable | Description |
+|----------|-------------|
+| `REDIS_URL` | Redis connection string used by BullMQ, rate limiter, idempotency, and AI cache |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `SENDGRID_API_KEY` | SendGrid API key |
+| `SENDGRID_FROM` | Verified SendGrid sender email |
+| `MAILGUN_API_KEY` | Mailgun API key |
+| `MAILGUN_DOMAIN` | Mailgun sending domain |
+| `MAILGUN_FROM` | Mailgun sender address |
+| `SMTP_HOST` | SMTP server hostname |
+| `SMTP_PORT` | SMTP server port |
+| `SMTP_USER` | SMTP username |
+| `SMTP_PASS` | SMTP password |
+| `SMTP_FROM` | SMTP sender email |
+| `SMTP_SECURE` | `true` for TLS, otherwise `false` |
+| `GOOGLE_API_KEY` | Google Gemini API key |
+| `AI_PERSONALISATION_ENABLED` | Enable or disable AI-generated subject lines |
+| `PORT` | Backend server port (default: `3000`) |
+
+---
+
+# 📜 Available Scripts
+
+## Backend
+
+```bash
+npm install
+npm run dev
+npm start
+npm test
+npm run metrics
+```
+
+### Dashboard
+
+```bash
+cd dashboard
+
+npm install
+npm run dev
+npm run build
+```
+
+---
+
+# 🧪 Load Testing
+
+The project includes **k6** load tests for validating bulk email throughput under realistic workloads.
+
+Run locally:
+
+```bash
+k6 run load-tests/campaign.js
+```
+
+Run against a deployed server:
+
+```bash
+k6 run -e BASE_URL=https://your-domain.com load-tests/campaign.js
+```
+
+---
+
+# 📂 Project Structure
+
+```text
+.
+├── dashboard/              # React + Vite monitoring dashboard
+├── load-tests/             # k6 performance tests
+├── src/
+│   ├── db/                 # PostgreSQL configuration
+│   ├── queues/             # BullMQ queue definitions
+│   ├── routes/             # REST API endpoints
+│   ├── services/           # Email providers, AI, rate limiter, metrics
+│   ├── utils/              # Utility helpers
+│   └── workers/            # BullMQ email workers
+├── tests/                  # Integration and unit tests
+├── Photos/                 # README screenshots
+├── package.json
+└── README.md
+```
+
+---
+
+# 📊 Monitoring & Dashboard
+
+The built-in dashboard provides live operational insights, including:
+
+- 📧 Total Emails Sent
+- 📈 Delivery Success Rate
+- ❌ Failed Deliveries
+- ⏳ Queue Depth
+- 🟢 Provider Health Status
+- ⚡ Email Throughput
+- 🤖 AI Personalization Status
+- 📋 Recent Delivery Failures
+
+Metrics are exposed in **Prometheus** format and can be visualized using **Grafana**.
+
+---
+
+# 📝 Notes
+
+- Every email is protected using Redis-backed idempotency keys to eliminate duplicate sends.
+- Circuit breakers automatically switch providers when failures occur.
+- AI personalization is optional and gracefully falls back to the original subject line.
+- The React dashboard consumes backend APIs and can be deployed independently.
+- All screenshots used in this README are stored inside the `Photos/` directory.
+
+---
+
+# 🚀 Future Improvements
+
+- Multi-tenant campaign management
+- Email template builder
+- Webhook support for delivery events
+- Campaign scheduling
+- Recipient segmentation
+- Open and click tracking
+- Docker Compose production deployment
+- Kubernetes deployment manifests
+
+---
+
+# 🤝 Contributing
+
+Contributions are welcome!
+
+1. Fork the repository.
+2. Create a new feature branch.
+3. Commit your changes.
+4. Push your branch.
+5. Open a Pull Request.
+
+---
+
+# 📄 License
+
+This project is licensed under the **MIT License**.
+
+---
+
+## ⭐ Support
+
+If you found this project useful, consider giving it a ⭐ on GitHub!
